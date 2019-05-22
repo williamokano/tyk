@@ -31,7 +31,9 @@ const (
 	TrackThisEndpoint
 	DoNotTrackThisEndpoint
 	UrlRewritePath
+	UrlRewriteTarget
 	RequestMethod
+	TransformedRequestMethod
 	OrigRequestURL
 	LoopLevel
 	LoopLevelLimit

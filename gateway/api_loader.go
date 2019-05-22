@@ -297,14 +297,15 @@ func processSpec(spec *APISpec, apisByListen map[string]int,
 		mwAppendEnabled(&chainArray, &VersionCheck{BaseMiddleware: baseMid})
 		mwAppendEnabled(&chainArray, &RequestSizeLimitMiddleware{baseMid})
 		mwAppendEnabled(&chainArray, &TrackEndpointMiddleware{baseMid})
-
 		mwAppendEnabled(&chainArray, &TransformMiddleware{baseMid})
 		mwAppendEnabled(&chainArray, &TransformJQMiddleware{baseMid})
 		mwAppendEnabled(&chainArray, &TransformHeaders{BaseMiddleware: baseMid})
-		mwAppendEnabled(&chainArray, &RedisCacheMiddleware{BaseMiddleware: baseMid, CacheStore: &cacheStore})
 		mwAppendEnabled(&chainArray, &VirtualEndpoint{BaseMiddleware: baseMid})
 		mwAppendEnabled(&chainArray, &URLRewriteMiddleware{BaseMiddleware: baseMid})
 		mwAppendEnabled(&chainArray, &TransformMethod{BaseMiddleware: baseMid})
+		//Do not add middlewares after cache middleware.
+		//It will not get executed
+		mwAppendEnabled(&chainArray, &RedisCacheMiddleware{BaseMiddleware: baseMid, CacheStore: &cacheStore})
 
 		for _, obj := range mwPostFuncs {
 			if mwDriver != apidef.OttoDriver {
@@ -409,9 +410,12 @@ func processSpec(spec *APISpec, apisByListen map[string]int,
 		mwAppendEnabled(&chainArray, &TransformJQMiddleware{baseMid})
 		mwAppendEnabled(&chainArray, &TransformHeaders{BaseMiddleware: baseMid})
 		mwAppendEnabled(&chainArray, &URLRewriteMiddleware{BaseMiddleware: baseMid})
-		mwAppendEnabled(&chainArray, &RedisCacheMiddleware{BaseMiddleware: baseMid, CacheStore: &cacheStore})
+
 		mwAppendEnabled(&chainArray, &TransformMethod{BaseMiddleware: baseMid})
 		mwAppendEnabled(&chainArray, &VirtualEndpoint{BaseMiddleware: baseMid})
+		//Do not add middlewares after cache middleware.
+		//It will not get executed
+		mwAppendEnabled(&chainArray, &RedisCacheMiddleware{BaseMiddleware: baseMid, CacheStore: &cacheStore})
 
 		for _, obj := range mwPostFuncs {
 			if mwDriver != apidef.OttoDriver {
@@ -485,6 +489,14 @@ type DummyProxyHandler struct {
 }
 
 func (d *DummyProxyHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if newURL := ctxGetUrlRewriteTarget(r); newURL != nil {
+		r.URL = newURL
+		ctxSetUrlRewriteTarget(r, nil)
+	}
+	if newMethod := ctxGetTransformRequestMethod(r); newMethod != "" {
+		r.Method = newMethod
+		ctxSetTransformRequestMethod(r, "")
+	}
 	if found, err := isLoop(r); found {
 		if err != nil {
 			handler := ErrorHandler{*d.SH.Base()}
