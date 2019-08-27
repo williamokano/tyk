@@ -44,7 +44,7 @@ const hmacAuthDef = `{
 	},
 	"proxy": {
 		"listen_path": "/v1",
-		"target_url": "` + testHttpAny + `"
+		"target_url": "` + TestHttpAny + `"
 	}
 }`
 
@@ -79,7 +79,7 @@ func createRSAAuthSession(pubCertId string) *user.SessionState {
 }
 
 func getHMACAuthChain(spec *APISpec) http.Handler {
-	remote, _ := url.Parse(testHttpAny)
+	remote, _ := url.Parse(TestHttpAny)
 	proxy := TykNewSingleHostReverseProxy(remote, spec)
 	proxyHandler := ProxyHandler(proxy, spec)
 	baseMid := BaseMiddleware{Spec: spec, Proxy: proxy}
