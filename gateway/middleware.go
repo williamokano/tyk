@@ -418,7 +418,7 @@ func (t BaseMiddleware) ApplyPolicies(session *user.SessionState) error {
 					rights[k] = v
 				}
 				session.HMACEnabled = policy.HMACEnabled
-				session.RSAEnabled = policy.RSAEnabled
+				session.EnableHTTPSignatureValidation = policy.EnableHTTPSignatureValidation
 			}
 		} else {
 			if len(policies) > 1 {
@@ -444,7 +444,7 @@ func (t BaseMiddleware) ApplyPolicies(session *user.SessionState) error {
 			// ACL
 			rights = policy.AccessRights
 			session.HMACEnabled = policy.HMACEnabled
-			session.RSAEnabled = policy.RSAEnabled
+			session.EnableHTTPSignatureValidation = policy.EnableHTTPSignatureValidation
 		}
 
 		// Required for all
