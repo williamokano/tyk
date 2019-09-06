@@ -165,6 +165,18 @@ func (k *OpenIDMW) ProcessRequest(w http.ResponseWriter, r *http.Request, _ inte
 	logger.Debug("Generated Session ID: ", sessionID)
 
 	var policiesToApply []string
+	resourceAccess := (token.Claims.(jwt.MapClaims))["resource_access"].(map[string]interface{})
+	resourceClient := resourceAccess["tyk-client"].(map[string]interface{})
+	resourceRolesAsInterface := resourceClient["roles"].([]interface{})
+	resourceRolesAsArray := make([]string, len(resourceRolesAsInterface))
+
+	for i, v := range resourceRolesAsInterface {
+		resourceRolesAsArray[i] = v.(string)
+	}
+
+	logger.Debug("Found claim", resourceRolesAsArray)
+
+	/*
 	if !useScope {
 		policiesToApply = append(policiesToApply, policyID)
 	} else {
@@ -178,6 +190,8 @@ func (k *OpenIDMW) ProcessRequest(w http.ResponseWriter, r *http.Request, _ inte
 			policiesToApply = mapScopeToPolicies(k.Spec.JWTScopeToPolicyMapping, scope)
 		}
 	}
+	*/
+	policiesToApply = mapScopeToPolicies(k.Spec.JWTScopeToPolicyMapping, resourceRolesAsArray)
 
 	session, exists := k.CheckSessionAndIdentityForValidKey(sessionID, r)
 	if !exists {
